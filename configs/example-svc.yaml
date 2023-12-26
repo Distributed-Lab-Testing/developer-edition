@@ -1,0 +1,16 @@
+log:
+  level: "debug"
+  disable_sentry: true
+
+db:
+  url: "postgres://example:example@example-db/example?sslmode=disable"
+
+listener:
+  addr: :80
+
+cop:
+  disabled: false
+  endpoint: "http://cop"
+  upstream: "http://example-svc"
+  service_name: "example-svc"
+  service_port: 80
