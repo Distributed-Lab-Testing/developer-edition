@@ -15,7 +15,7 @@ services:
       upstream:
         condition: service_started
     ports:
-      - "81:80"
+      - "80:80"
       - "8081:8080"
     volumes:
       - ./configs/traefik.yaml:/traefik.yaml
@@ -34,7 +34,7 @@ services:
   
   # ---- example-svc ----
   example-svc:
-    image: ghcr.io/distributed-lab-testing/example-svc:b200e2dd52fbcf5ad4cb3eb32af0ed40cebe9bce
+    image: ghcr.io/distributed-lab-testing/example-svc:61fa11148afe342a9cfa244cef4c0fe9c88a5bdf
     restart: unless-stopped
     environment:
       - KV_VIPER_FILE=/config.yaml
