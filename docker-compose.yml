@@ -34,7 +34,7 @@ services:
   
   # ---- example-svc ----
   example-svc:
-    image: ghcr.io/distributed-lab-testing/example-svc:61fa11148afe342a9cfa244cef4c0fe9c88a5bdf
+    image: ghcr.io/distributed-lab-testing/example-svc:a5fedaedf540fa610bf7f14d0c5413a836d2e11a
     restart: unless-stopped
     environment:
       - KV_VIPER_FILE=/config.yaml
@@ -59,9 +59,23 @@ services:
     volumes:
       - example-data:/pgdata
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U logs"]
-      interval: 5s
-      timeout: 5s
+      test: ["CMD-SHELL", "pg_isready -U example"]
+      interval: 10s
+      timeout: 10s
       retries: 5
+    ports:
+      - "5432:5432"
+  
+  #---- Integration tests ----
+  integration-tests:
+    image: ghcr.io/distributed-lab-testing/integration-tests:latest
+    depends_on: 
+      - upstream
+      - traefik
+      - cop
+      - example-svc
+      - example-db
+    entrypoint: sh -c "tail -f /dev/null"
+
 volumes:
   example-data: 
