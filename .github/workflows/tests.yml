@@ -1,0 +1,26 @@
+name: Integration Tests
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '*'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.CI_DISTR_DEV }} | docker login ghcr.io -u koteykazx --password-stdin
+
+      - uses: adambirds/docker-compose-action@v1.3.0
+        with:
+          compose-file: "./docker-compose.yml"
+          down-flags: "--volumes"
+          
+          test-container: integration-tests
+          test-command: "/usr/local/bin/integration_tests.bin -test.v"

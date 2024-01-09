@@ -1,0 +1,79 @@
+version: "3.3"
+
+services:
+  upstream:
+    image: nginx
+    restart: unless-stopped
+    volumes:
+      - ./configs/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8000:80"
+
+  traefik:
+    image: traefik:v2.0
+    depends_on:
+      upstream:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "8081:8080"
+    volumes:
+      - ./configs/traefik.yaml:/traefik.yaml
+
+  cop:
+    image: tokend/traefik-cop:1.1.0
+    restart: unless-stopped
+    depends_on:
+      traefik:
+        condition: service_started
+    environment:
+      - KV_VIPER_FILE=/config.yaml
+    volumes:
+      - ./configs/cop.yaml:/config.yaml
+    entrypoint: sh -c "traefik-cop run"
+  
+  # ---- example-svc ----
+  example-svc:
+    image: ghcr.io/distributed-lab-testing/example-svc:dd8f1917f1d8cd917a499fc0032d784ea2e91eb3
+    restart: unless-stopped
+    environment:
+      - KV_VIPER_FILE=/config.yaml
+    depends_on:
+      example-db:
+        condition: service_healthy
+      cop:
+        condition: service_started
+    volumes:
+      - ./configs/example-svc.yaml:/config.yaml
+    entrypoint: sh -c "example-svc migrate up && example-svc run service"
+
+  example-db:
+    image: postgres:13-alpine
+    container_name: example-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=example
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_DB=example
+      - PGDATA=/pgdata
+    volumes:
+      - example-data:/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U example"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
+  #---- Integration tests ----
+  integration-tests:
+    image: ghcr.io/distributed-lab-testing/integration-tests:latest
+    depends_on: 
+      - upstream
+      - traefik
+      - cop
+      - example-db
+      - example-svc
+    entrypoint: sh -c "tail -f /dev/null"
+
+volumes:
+  example-data: 
