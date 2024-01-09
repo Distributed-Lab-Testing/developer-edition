@@ -73,7 +73,7 @@ services:
       - cop
       - example-db
       - example-svc
-      entrypoint: sh -c "tail -f /dev/null"
+    entrypoint: sh -c "tail -f /dev/null"
 
 volumes:
   example-data: 
